@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
-const { Schema, model } = mongoose;
+const mongoosePaginate = require('mongoose-paginate-v2');
+const { Subscription } = require('../../helpers/constants');
+
+const { Schema, model, SchemaTypes } = mongoose;
 
 const contactSchema = new Schema(
   {
@@ -22,19 +25,17 @@ const contactSchema = new Schema(
     subscription: {
       type: String,
       default: 'free',
+      enum: [Subscription.FREE, Subscription.PRO, Subscription.PREMIUM],
     },
-    password: {
-      type: String,
-      default: 'password',
-    },
-    token: {
-      type: String,
-      default: '',
+    owner: {
+      type: SchemaTypes.ObjectId,
+      ref: 'user',
     },
   },
   { versionKey: false, timestamps: true },
 );
 
+contactSchema.plugin(mongoosePaginate);
 const Contact = model('contact', contactSchema);
 
 module.exports = Contact;
