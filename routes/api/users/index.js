@@ -6,14 +6,14 @@ const { createUser, validateUser } = require('./validation');
 const { createAccountLimiter } = require('../../../helpers/rate-limit-reg');
 
 router.post(
-  '/registration',
+  '/auth/register',
   createAccountLimiter,
   createUser,
   usersControllers.reg,
 );
-router.post('/login', validateUser, usersControllers.login);
-router.post('/logout', guard, usersControllers.logout);
+router.post('/auth/login', validateUser, usersControllers.login);
+router.post('/auth/logout', guard, usersControllers.logout);
 router.get('/current', guard, usersControllers.currentUser);
-router.post('/current', guard, usersControllers.updateSubscription);
+router.patch('/', guard, usersControllers.updateSubscription);
 
 module.exports = router;

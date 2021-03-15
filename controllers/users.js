@@ -69,15 +69,22 @@ const logout = async (req, res, next) => {
 };
 
 const currentUser = async (req, res, next) => {
-  const { email, subscription } = req.user;
-  return res.status(HttpCode.OK).json({
-    status: 'success',
-    code: HttpCode.OK,
-    data: {
-      email,
-      subscription,
-    },
-  });
+  const id = req.user.id;
+  try {
+    const user = await Users.findById(id);
+    return res.status(HttpCode.OK).json({
+      status: 'success',
+      code: HttpCode.OK,
+      data: {
+        user: {
+          email: user.email,
+          subscription: user.subscription,
+        },
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
 };
 
 const updateSubscription = async (req, res, next) => {
@@ -85,12 +92,14 @@ const updateSubscription = async (req, res, next) => {
   const id = req.user.id;
   try {
     await Users.updateSubscription(id, subscription);
-
+    const user = await Users.findById(id);
     return res.status(HttpCode.OK).json({
       status: 'Subscription is updated successfully',
       code: HttpCode.OK,
       data: {
-        subscription,
+        user: {
+          subscription: user.subscription,
+        },
       },
     });
   } catch (e) {
