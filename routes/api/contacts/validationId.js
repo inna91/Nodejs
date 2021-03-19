@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 function validateId(req, _res, next) {
-  const { contactId } = req.params;
+  const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(contactId)) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({
       status: 'error',
       code: 400,
-      message: `${contactId} is not valid`,
+      message: `${id} is not valid`,
     });
   }
   next();

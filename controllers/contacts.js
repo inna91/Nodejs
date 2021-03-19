@@ -20,7 +20,7 @@ const get = async (req, res, next) => {
 const getById = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const contact = await Contacts.getContactById(req.params, userId);
+    const contact = await Contacts.getContactById(req.params.id, userId);
     if (contact) {
       return res.status(HttpCode.OK).json({
         status: 'success',
