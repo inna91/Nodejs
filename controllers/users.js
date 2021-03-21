@@ -7,10 +7,12 @@ const { HttpCode } = require('../helpers/constants');
 const createFolderIsExist = require('../helpers/create-dir');
 require('dotenv').config();
 const SECRET_KEY = process.env.JWT_SECRET;
+const { nanoid } = require('nanoid');
+const EmailService = require('../services/email');
 
 const reg = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, name } = req.body;
     const user = await Users.findByEmail(email);
     if (user) {
       return res.status(HttpCode.CONFLICT).json({
@@ -21,7 +23,15 @@ const reg = async (req, res, next) => {
       });
     }
 
-    const newUser = await Users.create({ email, password });
+    const verificationToken = nanoid();
+    const emailService = new EmailService(process.env.NODE_ENV);
+    await emailService.sendEmail(verificationToken, email, name);
+
+    const newUser = await Users.create({
+      ...req.body,
+      verify: false,
+      verificationToken,
+    });
     return res.status(HttpCode.CREATED).json({
       status: 'success',
       code: HttpCode.CREATED,
@@ -41,7 +51,7 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
     const user = await Users.findByEmail(email);
     const isValidPassword = await user?.validPassword(password);
-    if (!user || !isValidPassword) {
+    if (!user || !isValidPassword || !user.verify) {
       return res.status(HttpCode.UNAUTHORIZED).json({
         status: 'error',
         code: HttpCode.UNAUTHORIZED,
@@ -153,6 +163,30 @@ const saveAvatarToStatic = async req => {
   return avatarUrl;
 };
 
+const verify = async (req, res, next) => {
+  try {
+    const user = await Users.findByVerificationToken(
+      req.params.verificationToken,
+    );
+    if (user) {
+      await Users.updateVerificationToken(user.id, true, null);
+      return res.json({
+        status: 'success',
+        code: HttpCode.OK,
+        message: 'Verification is successful',
+      });
+    }
+    return res.status(HttpCode.NOT_FOUND).json({
+      status: 'error',
+      code: HttpCode.NOT_FOUND,
+      data: 'Not found',
+      message: 'User not found',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   reg,
   login,
@@ -160,4 +194,5 @@ module.exports = {
   currentUser,
   updateSubscription,
   avatars,
+  verify,
 };
